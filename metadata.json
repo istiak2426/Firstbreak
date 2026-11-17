@@ -1,0 +1,6 @@
+{
+  "name": "FirstBreak",
+  "description": "Live RSS news clustering, breaking-news lead-time comparison, and Google Search trend intelligence.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
