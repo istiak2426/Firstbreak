@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import type { FeedConfig, FeedStatus, Language } from '../types/news';
 import type { Translations } from '../utils/i18n';
 
@@ -38,6 +38,7 @@ export function Sidebar({
   onLanguageChange,
   t,
 }: SidebarProps) {
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newSource, setNewSource] = useState('');
   const [newUrl, setNewUrl] = useState('');
@@ -78,10 +79,10 @@ export function Sidebar({
   };
 
   return (
-    <aside className="w-full lg:w-[270px] shrink-0 space-y-5">
+    <aside className="w-full lg:w-[260px] shrink-0 space-y-4">
       {/* Language Switch */}
       <section className="bg-white border border-slate-200 rounded-lg p-4">
-        <h2 className="text-xs font-semibold text-slate-700 mb-2.5">
+        <h2 className="text-xs font-semibold text-slate-700 mb-2">
           {t.languageLabel}
         </h2>
         <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-md">
@@ -110,63 +111,6 @@ export function Sidebar({
         </div>
       </section>
 
-      {/* Reading Preferences */}
-      <section className="bg-white border border-slate-200 rounded-lg p-4 space-y-4">
-        <h2 className="text-xs font-semibold text-slate-700">
-          {t.storyGrouping}
-        </h2>
-
-        <div>
-          <span className="block text-xs font-medium text-slate-700 mb-2">
-            {t.groupingModeLabel}
-          </span>
-          <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-md">
-            {GROUPING_PRESETS.map((preset) => {
-              const isSelected = Math.abs(threshold - preset.value) < 0.03;
-              return (
-                <button
-                  key={preset.key}
-                  type="button"
-                  onClick={() => onThresholdChange(preset.value)}
-                  className={`py-1.5 px-2 text-xs font-medium rounded transition-colors whitespace-nowrap cursor-pointer ${
-                    isSelected
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {getPresetLabel(preset.key)}
-                </button>
-              );
-            })}
-          </div>
-          <p className="mt-2 text-xs text-slate-500 leading-relaxed">
-            {t.groupingHint}
-          </p>
-        </div>
-
-        <div className="pt-3 border-t border-slate-100">
-          <span className="block text-xs font-medium text-slate-700 mb-2">
-            {t.storiesPerSource}
-          </span>
-          <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-md">
-            {[5, 8, 12].map((count) => (
-              <button
-                key={count}
-                type="button"
-                onClick={() => onLimitChange(count)}
-                className={`py-1.5 text-xs font-mono tabular-nums font-medium rounded transition-colors cursor-pointer ${
-                  limitPerFeed === count
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {count}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* News Sources */}
       <section className="bg-white border border-slate-200 rounded-lg p-4">
         <h2 className="text-xs font-semibold text-slate-700 mb-3">
@@ -178,35 +122,23 @@ export function Sidebar({
             const st = statusMap.get(feed.id);
             return (
               <li key={feed.id} className="py-2.5 first:pt-0 last:pb-0">
-                <div className="flex items-start justify-between gap-2">
-                  <label className="flex items-start gap-2.5 cursor-pointer min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <label className="flex items-center gap-2.5 cursor-pointer min-w-0 flex-1">
                     <input
                       type="checkbox"
                       checked={feed.enabled}
                       onChange={() => onToggleFeed(feed.id)}
-                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-blue-600 cursor-pointer"
+                      className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-blue-600 cursor-pointer shrink-0"
                     />
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium text-slate-900 truncate">
                         {feed.source}
                       </div>
-                      <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
-                        <span>{feed.language === 'bn' ? 'বাংলা' : 'English'}</span>
-                        {st && feed.enabled && (
-                          <>
-                            <span aria-hidden="true">·</span>
-                            {st.status === 'ok' ? (
-                              <span className="tabular-nums text-emerald-700">
-                                {st.count} {t.storyCountUnit}
-                              </span>
-                            ) : (
-                              <span className="text-amber-700">
-                                {t.unavailableText}
-                              </span>
-                            )}
-                          </>
-                        )}
-                      </div>
+                      {st && st.status === 'error' && feed.enabled && (
+                        <div className="text-[11px] text-amber-700">
+                          {t.unavailableText}
+                        </div>
+                      )}
                     </div>
                   </label>
 
@@ -226,54 +158,121 @@ export function Sidebar({
           })}
         </ul>
 
+        {/* Collapsible More Settings */}
         <div className="mt-3 pt-3 border-t border-slate-100">
-          {!showAddForm ? (
-            <button
-              type="button"
-              onClick={() => setShowAddForm(true)}
-              className="text-xs font-medium text-blue-600 hover:text-blue-700 cursor-pointer"
-            >
-              {t.addSourceToggle}
-            </button>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-2">
-              <input
-                type="text"
-                value={newSource}
-                onChange={(e) => setNewSource(e.target.value)}
-                placeholder={t.addSourcePlaceholderName}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-md text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-slate-400"
-              />
-              <input
-                type="url"
-                value={newUrl}
-                onChange={(e) => setNewUrl(e.target.value)}
-                placeholder={t.addSourcePlaceholderUrl}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-md text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-slate-400"
-              />
-              {formError && (
-                <p className="text-[11px] text-red-600">{formError}</p>
-              )}
-              <div className="flex items-center gap-2">
-                <button
-                  type="submit"
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>{t.addSourceBtn}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddForm(false);
-                    setFormError('');
-                  }}
-                  className="px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 cursor-pointer"
-                >
-                  {t.cancelBtn}
-                </button>
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="w-full flex items-center justify-between text-xs font-medium text-slate-600 hover:text-slate-900 cursor-pointer"
+          >
+            <span>{showAdvanced ? t.hideSettings : t.moreSettings}</span>
+            {showAdvanced ? (
+              <ChevronUp className="w-3.5 h-3.5" />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5" />
+            )}
+          </button>
+
+          {showAdvanced && (
+            <div className="mt-4 space-y-4">
+              <div>
+                <span className="block text-xs font-medium text-slate-700 mb-1.5">
+                  {t.groupingModeLabel}
+                </span>
+                <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-md">
+                  {GROUPING_PRESETS.map((preset) => {
+                    const isSelected = Math.abs(threshold - preset.value) < 0.03;
+                    return (
+                      <button
+                        key={preset.key}
+                        type="button"
+                        onClick={() => onThresholdChange(preset.value)}
+                        className={`py-1.5 px-1.5 text-[11px] font-medium rounded transition-colors whitespace-nowrap cursor-pointer ${
+                          isSelected
+                            ? 'bg-white text-slate-900 shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        {getPresetLabel(preset.key)}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </form>
+
+              <div>
+                <span className="block text-xs font-medium text-slate-700 mb-1.5">
+                  {t.storiesPerSource}
+                </span>
+                <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-md">
+                  {[5, 8, 12].map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => onLimitChange(count)}
+                      className={`py-1.5 text-xs font-mono tabular-nums font-medium rounded transition-colors cursor-pointer ${
+                        limitPerFeed === count
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      {count}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100">
+                {!showAddForm ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm(true)}
+                    className="text-xs font-medium text-blue-600 hover:text-blue-700 cursor-pointer"
+                  >
+                    {t.addSourceToggle}
+                  </button>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-2">
+                    <input
+                      type="text"
+                      value={newSource}
+                      onChange={(e) => setNewSource(e.target.value)}
+                      placeholder={t.addSourcePlaceholderName}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-md text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-slate-400"
+                    />
+                    <input
+                      type="url"
+                      value={newUrl}
+                      onChange={(e) => setNewUrl(e.target.value)}
+                      placeholder={t.addSourcePlaceholderUrl}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-md text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-slate-400"
+                    />
+                    {formError && (
+                      <p className="text-[11px] text-red-600">{formError}</p>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="submit"
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>{t.addSourceBtn}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAddForm(false);
+                          setFormError('');
+                        }}
+                        className="px-2 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 cursor-pointer"
+                      >
+                        {t.cancelBtn}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </section>

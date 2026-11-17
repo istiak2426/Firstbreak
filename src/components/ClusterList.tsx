@@ -19,7 +19,7 @@ interface ClusterListProps {
   t: Translations;
 }
 
-type FilterMode = 'all' | 'multi';
+type FilterMode = 'compared' | 'all';
 type SortMode = 'multi' | 'latest' | 'gap';
 
 function formatRelativeTime(ms: number, lang: Language): string {
@@ -58,6 +58,24 @@ function formatDelayLabel(mins: number, isFirst: boolean, t: Translations): stri
   return `${formatDuration(mins, t)} ${t.laterSuffix}`;
 }
 
+function formatRank(index: number, lang: Language, t: Translations): string {
+  if (index === 0) return t.rankFirst;
+  if (lang === 'bn') {
+    const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    const numStr = String(index + 1)
+      .split('')
+      .map((d) => bnDigits[Number(d)] ?? d)
+      .join('');
+    if (index === 1 || index === 2) return `${numStr}য়`;
+    if (index === 3) return `${numStr}র্থ`;
+    return `${numStr}ম`;
+  }
+  const n = index + 1;
+  if (n === 2) return '2nd';
+  if (n === 3) return '3rd';
+  return `${n}th`;
+}
+
 export function ClusterList({
   data,
   isLoading,
@@ -67,24 +85,32 @@ export function ClusterList({
   t,
 }: ClusterListProps) {
   const [query, setQuery] = useState('');
-  const [filterMode, setFilterMode] = useState<FilterMode>('all');
+  const [filterMode, setFilterMode] = useState<FilterMode>('compared');
   const [sortMode, setSortMode] = useState<SortMode>('multi');
 
   const topFirstBreaker = useMemo(() => {
     if (!data || data.outlet_stats.length === 0) return '—';
     const top = data.outlet_stats[0];
-    if (top.first_to_break === 0) {
-      return top.source;
-    }
+    if (top.first_to_break === 0) return '—';
     return `${top.source} (${top.first_to_break})`;
   }, [data]);
+
+  const activeSourceCount = useMemo(() => {
+    if (!data) return 0;
+    return data.feed_statuses.filter((f) => f.status === 'ok').length;
+  }, [data]);
+
+  const effectiveFilterMode: FilterMode =
+    filterMode === 'compared' && data && data.multi_source_clusters === 0
+      ? 'all'
+      : filterMode;
 
   const filteredStories = useMemo(() => {
     if (!data) return [];
     const q = query.trim().toLowerCase();
 
     const list = data.stories.filter((cluster) => {
-      if (filterMode === 'multi' && cluster.source_count < 2) {
+      if (effectiveFilterMode === 'compared' && cluster.source_count < 2) {
         return false;
       }
       if (!q) return true;
@@ -108,7 +134,7 @@ export function ClusterList({
       if (b.source_count !== a.source_count) return b.source_count - a.source_count;
       return b.earliest_ms - a.earliest_ms;
     });
-  }, [data, query, filterMode, sortMode]);
+  }, [data, query, effectiveFilterMode, sortMode]);
 
   if (error && !data) {
     return (
@@ -132,8 +158,8 @@ export function ClusterList({
     return (
       <div className="space-y-4">
         <div className="bg-white border border-slate-200 rounded-lg p-6">
-          <h3 className="text-sm font-semibold text-slate-900">{t.loadingTitle}</h3>
-          <p className="mt-1 text-xs text-slate-500">{t.loadingDesc}</p>
+          <h3 className="text-base font-semibold text-slate-900">{t.loadingTitle}</h3>
+          <p className="mt-1 text-sm text-slate-500">{t.loadingDesc}</p>
         </div>
         {[1, 2, 3].map((item) => (
           <div
@@ -153,7 +179,17 @@ export function ClusterList({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Clear 1-glance explanation banner */}
+      <section className="bg-white border border-slate-200 rounded-lg p-5">
+        <h1 className="text-lg sm:text-xl font-bold text-slate-900">
+          {t.heroTitle}
+        </h1>
+        <p className="mt-1.5 text-sm text-slate-600 leading-relaxed max-w-3xl">
+          {t.heroSubtitle}
+        </p>
+      </section>
+
       {error && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-xs text-amber-900">
@@ -170,80 +206,79 @@ export function ClusterList({
         </div>
       )}
 
-      {/* 4-Column Flat Summary Strip */}
+      {/* 3-Column Clear Summary Strip */}
       {data && (
-        <div className="bg-white border border-slate-200 rounded-lg grid grid-cols-2 xl:grid-cols-4 divide-y xl:divide-y-0 xl:divide-x divide-slate-200">
+        <div className="bg-white border border-slate-200 rounded-lg grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-200">
           <div className="p-4">
-            <div className="text-xs font-medium text-slate-500">{t.totalStories}</div>
-            <div className="mt-1 text-2xl font-bold font-mono tabular-nums text-slate-900">
-              {data.total_articles}
-            </div>
-          </div>
-          <div className="p-4">
-            <div className="text-xs font-medium text-slate-500">{t.storyTopics}</div>
-            <div className="mt-1 text-2xl font-bold font-mono tabular-nums text-slate-900">
-              {data.total_clusters}
-            </div>
-          </div>
-          <div className="p-4">
-            <div className="text-xs font-medium text-slate-500">{t.multiSourceStories}</div>
+            <div className="text-xs font-medium text-slate-500">{t.statCompared}</div>
             <div className="mt-1 text-2xl font-bold font-mono tabular-nums text-blue-600">
               {data.multi_source_clusters}
             </div>
+            <div className="mt-0.5 text-xs text-slate-500">{t.statComparedSub}</div>
           </div>
           <div className="p-4">
-            <div className="text-xs font-medium text-slate-500">{t.fastestOutlet}</div>
+            <div className="text-xs font-medium text-slate-500">{t.statFastest}</div>
             <div className="mt-1 text-lg font-bold text-slate-900 truncate">
               {topFirstBreaker}
+            </div>
+            <div className="mt-0.5 text-xs text-slate-500">{t.statFastestSub}</div>
+          </div>
+          <div className="p-4">
+            <div className="text-xs font-medium text-slate-500">{t.statSources}</div>
+            <div className="mt-1 text-2xl font-bold font-mono tabular-nums text-slate-900">
+              {activeSourceCount}
+            </div>
+            <div className="mt-0.5 text-xs text-slate-500">
+              {activeSourceCount} {t.statSourcesSub}
             </div>
           </div>
         </div>
       )}
 
-      {/* Filter & Sort Toolbar */}
+      {/* Simple Filter & Search Bar */}
       <div className="bg-white border border-slate-200 rounded-lg p-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="relative flex-1 min-w-0">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t.searchPlaceholder}
-            className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-md text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-slate-400"
-          />
+        <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-md shrink-0">
+          <button
+            type="button"
+            onClick={() => setFilterMode('compared')}
+            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap cursor-pointer ${
+              effectiveFilterMode === 'compared'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            {t.filterCompared}
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterMode('all')}
+            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap cursor-pointer ${
+              effectiveFilterMode === 'all'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            {t.filterAll}
+          </button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-md">
-            <button
-              type="button"
-              onClick={() => setFilterMode('all')}
-              className={`px-3 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap cursor-pointer ${
-                filterMode === 'all'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              {t.filterAll}
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterMode('multi')}
-              className={`px-3 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap cursor-pointer ${
-                filterMode === 'multi'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              {t.filterMulti}
-            </button>
+        <div className="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-2 min-w-0">
+          <div className="relative flex-1 min-w-0">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t.searchPlaceholder}
+              className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-md text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-slate-400"
+            />
           </div>
 
           <select
             aria-label="Sort stories"
             value={sortMode}
             onChange={(e) => setSortMode(e.target.value as SortMode)}
-            className="px-3 py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-md text-slate-700 focus:outline-none focus:border-slate-400 cursor-pointer"
+            className="px-3 py-2 text-xs font-medium bg-slate-50 border border-slate-200 rounded-md text-slate-700 focus:outline-none focus:border-slate-400 cursor-pointer shrink-0"
           >
             <option value="multi">{t.sortMultiFirst}</option>
             <option value="latest">{t.sortLatest}</option>
@@ -265,38 +300,39 @@ export function ClusterList({
               setQuery('');
               setFilterMode('all');
             }}
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors cursor-pointer"
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
           >
-            {t.resetFilters}
+            {t.showAllBtn}
           </button>
         </div>
       ) : (
         <div className="space-y-4">
           {filteredStories.map((cluster) => {
+            const isMulti = cluster.source_count >= 2;
             const leadSnippet = cluster.articles[0]?.snippet;
 
             return (
               <article
                 key={cluster.id}
-                className="bg-white border border-slate-200 rounded-lg p-5 transition-colors"
+                className="bg-white border border-slate-200 rounded-lg p-5"
               >
-                {/* Clean editorial metadata line */}
+                {/* Clear summary kicker */}
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold text-emerald-700">
-                      {cluster.earliest_source}
-                    </span>
-                    <span aria-hidden="true">·</span>
-                    <span className="tabular-nums">
-                      {cluster.source_count} {t.sourcesCount}
-                    </span>
-                    {cluster.max_delay_minutes > 0 && (
+                    {isMulti ? (
                       <>
+                        <span className="font-semibold text-emerald-700">
+                          {t.publishedFirstBy} {cluster.earliest_source}
+                        </span>
                         <span aria-hidden="true">·</span>
-                        <span className="tabular-nums text-amber-700">
-                          {t.leadMargin}: {formatDuration(cluster.max_delay_minutes, t)}
+                        <span className="tabular-nums font-medium text-slate-700">
+                          {cluster.source_count} {t.sourcesCount}
                         </span>
                       </>
+                    ) : (
+                      <span className="text-slate-500">
+                        {t.singleOutletNote}
+                      </span>
                     )}
                   </div>
 
@@ -306,7 +342,7 @@ export function ClusterList({
                 </div>
 
                 {/* Story Headline */}
-                <h3 className="mt-2 text-base sm:text-lg font-semibold text-slate-900 leading-snug">
+                <h2 className="mt-2 text-base sm:text-lg font-semibold text-slate-900 leading-snug">
                   <a
                     href={cluster.articles[0]?.link}
                     target="_blank"
@@ -315,7 +351,7 @@ export function ClusterList({
                   >
                     {cluster.story_topic}
                   </a>
-                </h3>
+                </h2>
 
                 {leadSnippet && (
                   <p className="mt-1.5 text-sm text-slate-600 leading-relaxed line-clamp-2">
@@ -323,7 +359,7 @@ export function ClusterList({
                   </p>
                 )}
 
-                {/* Chronological Outlet Coverage */}
+                {/* Chronological Outlet List */}
                 <div className="mt-4 divide-y divide-slate-100 border-t border-slate-100">
                   {cluster.articles.map((art, index) => (
                     <div
@@ -331,21 +367,26 @@ export function ClusterList({
                       className="py-3 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4"
                     >
                       <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
-                        <div className="w-40 shrink-0 flex items-center gap-1.5 text-xs tabular-nums">
-                          {art.is_first ? (
-                            <span className="inline-flex items-center gap-1 font-semibold text-emerald-700">
-                              <Zap className="w-3.5 h-3.5 shrink-0" />
-                              <span>{t.firstToReport}</span>
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-amber-700 font-medium">
-                              <Clock className="w-3.5 h-3.5 shrink-0" />
-                              <span>
-                                {formatDelayLabel(art.delay_minutes_num, false, t)}
+                        {isMulti && (
+                          <div className="w-40 shrink-0 flex items-center gap-1.5 text-xs tabular-nums">
+                            {art.is_first ? (
+                              <span className="inline-flex items-center gap-1 font-semibold text-emerald-700">
+                                <Zap className="w-3.5 h-3.5 shrink-0" />
+                                <span>
+                                  {formatRank(index, language, t)} · {t.firstToReport}
+                                </span>
                               </span>
-                            </span>
-                          )}
-                        </div>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-amber-700 font-medium">
+                                <Clock className="w-3.5 h-3.5 shrink-0" />
+                                <span>
+                                  {formatRank(index, language, t)} ·{' '}
+                                  {formatDelayLabel(art.delay_minutes_num, false, t)}
+                                </span>
+                              </span>
+                            )}
+                          </div>
+                        )}
 
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
@@ -376,7 +417,7 @@ export function ClusterList({
                         href={art.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900 whitespace-nowrap shrink-0 self-end sm:self-center"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 whitespace-nowrap shrink-0 self-end sm:self-center"
                       >
                         <span>{t.openArticle}</span>
                         <ArrowUpRight className="w-3.5 h-3.5" />
