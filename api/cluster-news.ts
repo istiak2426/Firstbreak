@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "http";
-import { clusterNewsFeeds, extractReadableError } from "../server/newsService";
-import type { FeedConfig } from "../src/types/news";
+import { clusterNewsFeeds, extractReadableError } from "./_lib/newsService.js";
+import type { FeedConfig } from "../src/types/news.js";
 
 interface VercelLikeRequest extends IncomingMessage {
   body?: unknown;

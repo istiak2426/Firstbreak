@@ -9,8 +9,8 @@ import {
   DEFAULT_FEEDS,
   extractReadableError,
   fetchGoogleTrendsRss,
-} from "./server/newsService";
-import type { FeedConfig } from "./src/types/news";
+} from "./api/_lib/newsService.js";
+import type { FeedConfig } from "./src/types/news.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

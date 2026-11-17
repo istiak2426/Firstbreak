@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "http";
-import { analyzeSearchTrend, extractReadableError } from "../../server/newsService";
+import { analyzeSearchTrend, extractReadableError } from "../_lib/newsService.js";
 
 interface VercelLikeRequest extends IncomingMessage {
   body?: unknown;

@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "http";
-import { extractReadableError, fetchGoogleTrendsRss } from "../../server/newsService";
+import { extractReadableError, fetchGoogleTrendsRss } from "../_lib/newsService.js";
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   res.setHeader("Content-Type", "application/json");

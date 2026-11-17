@@ -10,7 +10,7 @@ import type {
   OutletStat,
   StoryCluster,
   TrendAnalysisResponse,
-} from "../src/types/news";
+} from "../../src/types/news.js";
 
 export const DEFAULT_FEEDS: FeedConfig[] = [
   {
