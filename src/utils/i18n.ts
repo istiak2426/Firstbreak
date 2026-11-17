@@ -12,6 +12,10 @@ export interface Translations {
   addSourcePlaceholderName: string;
   addSourcePlaceholderUrl: string;
   addSourceBtn: string;
+  cancelBtn: string;
+  formRequiredError: string;
+  formProtocolError: string;
+  formInvalidUrlError: string;
   storyGrouping: string;
   groupingModeLabel: string;
   groupingExact: string;
@@ -33,6 +37,8 @@ export interface Translations {
   firstToReport: string;
   sameTime: string;
   laterSuffix: string;
+  minuteShort: string;
+  hourShort: string;
   checkTrend: string;
   hideTrend: string;
   checkingTrend: string;
@@ -48,6 +54,7 @@ export interface Translations {
   retryBtn: string;
   leaderboardTitle: string;
   leaderboardSubtitle: string;
+  leaderboardEmpty: string;
   colOutlet: string;
   colArticles: string;
   colShared: string;
@@ -62,11 +69,96 @@ export interface Translations {
   liveTrendsHeading: string;
   groundedAnalysisHeading: string;
   groundedSourcesHeading: string;
+  loadingTrends: string;
+  noTrends: string;
+  searchesUnit: string;
   storyCountUnit: string;
   unavailableText: string;
+  regions: Record<'BD' | 'US' | 'GB' | 'IN', string>;
 }
 
 export const I18N: Record<Language, Translations> = {
+  bn: {
+    brand: 'FirstBreak',
+    navClusters: 'প্রধান খবর',
+    navLeaderboard: 'কে সবার আগে',
+    navTrends: 'এখন ট্রেন্ডিং',
+    refreshNews: 'খবর আপডেট',
+    refreshing: 'আপডেট হচ্ছে...',
+    sidebarSources: 'সংবাদ মাধ্যমসমূহ',
+    addSourceToggle: '+ নতুন মাধ্যম যোগ করুন',
+    addSourcePlaceholderName: 'পত্রিকার নাম (যেমন: ঢাকা পোস্ট)',
+    addSourcePlaceholderUrl: 'ফিড লিংক (https://...)',
+    addSourceBtn: 'যোগ করুন',
+    cancelBtn: 'বাতিল',
+    formRequiredError: 'অনুগ্রহ করে পত্রিকার নাম এবং লিংক দুটিই লিখুন।',
+    formProtocolError: 'লিংকটি অবশ্যই http:// অথবা https:// দিয়ে শুরু হতে হবে।',
+    formInvalidUrlError: 'অনুগ্রহ করে একটি সঠিক ওয়েব লিংক দিন।',
+    storyGrouping: 'পড়ার পছন্দসমূহ',
+    groupingModeLabel: 'খবর মেলানোর ধরন',
+    groupingExact: 'হুবহু',
+    groupingBalanced: 'স্বাভাবিক',
+    groupingBroad: 'বিস্তৃত',
+    groupingHint: 'স্বাভাবিক মোডে বাংলা ও ইংরেজি মাধ্যমের একই বিষয়ের খবরগুলো একসাথে দেখানো হয়।',
+    storiesPerSource: 'প্রতি মাধ্যমের খবর',
+    languageLabel: 'ভাষা',
+    totalStories: 'মোট সংগৃহীত খবর',
+    storyTopics: 'মোট বিষয়',
+    multiSourceStories: 'একাধিক মাধ্যমে প্রকাশিত',
+    fastestOutlet: 'সবার আগে প্রকাশকারী',
+    searchPlaceholder: 'খবর বা পত্রিকার নাম খুঁজুন...',
+    filterAll: 'সব খবর',
+    filterMulti: 'একাধিক মাধ্যম',
+    sortMultiFirst: 'একাধিক মাধ্যম আগে',
+    sortLatest: 'সর্বশেষ খবর আগে',
+    sortBiggestGap: 'সর্বোচ্চ সময়ের ব্যবধান',
+    firstToReport: 'সবার আগে প্রকাশ',
+    sameTime: 'একই সময়ে',
+    laterSuffix: 'পরে',
+    minuteShort: 'মিনিট',
+    hourShort: 'ঘণ্টা',
+    checkTrend: 'ট্রেন্ড ও বিস্তারিত জানুন',
+    hideTrend: 'বন্ধ করুন',
+    checkingTrend: 'যাচাই হচ্ছে...',
+    sourcesCount: 'টি মাধ্যম',
+    leadMargin: 'সময়ের ব্যবধান',
+    openArticle: 'মূল খবর পড়ুন',
+    noClustersTitle: 'কোনো খবর পাওয়া যায়নি',
+    noClustersDesc: 'খবর মেলানোর ধরন "বিস্তৃত" করে দেখুন অথবা অনুসন্ধান মুছে ফেলুন।',
+    resetFilters: 'সব খবর দেখুন',
+    loadingTitle: 'সর্বশেষ খবর সংগ্রহ করা হচ্ছে',
+    loadingDesc: 'বিভিন্ন সংবাদমাধ্যমের খবর মিলিয়ে দেখা হচ্ছে কোন মাধ্যম সবার আগে প্রকাশ করেছে।',
+    errorTitle: 'খবর লোড করতে সমস্যা হয়েছে',
+    retryBtn: 'আবার চেষ্টা করুন',
+    leaderboardTitle: 'সংবাদমাধ্যমের দ্রুততার তালিকা',
+    leaderboardSubtitle: 'একই খবর একাধিক সংবাদমাধ্যমে প্রকাশিত হলে কে কত দ্রুত তা প্রকাশ করেছে তার তুলনা।',
+    leaderboardEmpty: 'সংবাদমাধ্যমগুলোর দ্রুততা তুলনা করতে অনুগ্রহ করে খবর আপডেট করুন।',
+    colOutlet: 'সংবাদমাধ্যম',
+    colArticles: 'মোট খবর',
+    colShared: 'যৌথ খবর',
+    colFirstBreaks: 'সবার আগে প্রকাশ',
+    colAvgDelay: 'গড় বিলম্ব',
+    colBestLead: 'সর্বোচ্চ লিড',
+    trendsTitle: 'মানুষ এখন কী খুঁজছে',
+    trendsSubtitle: 'লাইভ গুগল ট্রেন্ডস এবং যেকোনো খবরের বর্তমান জনপ্রিয়তা ও প্রেক্ষাপট দেখুন।',
+    analyzeKeywordPlaceholder: 'যেকোনো বিষয়, ব্যক্তি বা খবরের শিরোনাম লিখুন...',
+    analyzeBtn: 'জনপ্রিয়তা দেখুন',
+    analyzingBtn: 'দেখা হচ্ছে...',
+    liveTrendsHeading: 'এই মুহূর্তের ট্রেন্ডিং বিষয়',
+    groundedAnalysisHeading: 'সংক্ষিপ্ত প্রেক্ষাপট',
+    groundedSourcesHeading: 'সংশ্লিষ্ট সংবাদ সূত্র',
+    loadingTrends: 'ট্রেন্ডিং তালিকা লোড হচ্ছে...',
+    noTrends: 'এই মুহূর্তে কোনো ট্রেন্ডিং বিষয় পাওয়া যায়নি।',
+    searchesUnit: 'সার্চ',
+    storyCountUnit: 'টি খবর',
+    unavailableText: 'এই মুহূর্তে পাওয়া যাচ্ছে না',
+    regions: {
+      BD: 'বাংলাদেশ',
+      US: 'যুক্তরাষ্ট্র',
+      GB: 'যুক্তরাজ্য',
+      IN: 'ভারত',
+    },
+  },
   en: {
     brand: 'FirstBreak',
     navClusters: 'Top Stories',
@@ -79,6 +171,10 @@ export const I18N: Record<Language, Translations> = {
     addSourcePlaceholderName: 'Outlet name (e.g. Dhaka Post)',
     addSourcePlaceholderUrl: 'News feed link (https://...)',
     addSourceBtn: 'Add Source',
+    cancelBtn: 'Cancel',
+    formRequiredError: 'Please enter both the outlet name and link.',
+    formProtocolError: 'Link must start with http:// or https://',
+    formInvalidUrlError: 'Please enter a valid web link.',
     storyGrouping: 'Reading Preferences',
     groupingModeLabel: 'Story Grouping',
     groupingExact: 'Exact',
@@ -100,6 +196,8 @@ export const I18N: Record<Language, Translations> = {
     firstToReport: 'First to report',
     sameTime: 'Same time',
     laterSuffix: 'later',
+    minuteShort: 'm',
+    hourShort: 'h',
     checkTrend: 'Why is this trending?',
     hideTrend: 'Hide summary',
     checkingTrend: 'Checking...',
@@ -115,6 +213,7 @@ export const I18N: Record<Language, Translations> = {
     retryBtn: 'Try Again',
     leaderboardTitle: 'Outlet Reporting Speed',
     leaderboardSubtitle: 'Compares how quickly each newsroom publishes when multiple outlets cover the same event.',
+    leaderboardEmpty: 'Refresh news to compare reporting speed across outlets.',
     colOutlet: 'News Outlet',
     colArticles: 'Stories Tracked',
     colShared: 'Shared Stories',
@@ -129,72 +228,16 @@ export const I18N: Record<Language, Translations> = {
     liveTrendsHeading: 'Trending Searches Right Now',
     groundedAnalysisHeading: 'Story Context',
     groundedSourcesHeading: 'Related Coverage',
+    loadingTrends: 'Loading trending searches...',
+    noTrends: 'No trending topics available right now.',
+    searchesUnit: 'searches',
     storyCountUnit: 'stories',
     unavailableText: 'Unavailable right now',
-  },
-  bn: {
-    brand: 'FirstBreak',
-    navClusters: 'প্রধান খবর',
-    navLeaderboard: 'কে সবার আগে',
-    navTrends: 'এখন ট্রেন্ডিং',
-    refreshNews: 'খবর আপডেট',
-    refreshing: 'আপডেট হচ্ছে...',
-    sidebarSources: 'সংবাদ মাধ্যমসমূহ',
-    addSourceToggle: '+ নতুন মাধ্যম যোগ করুন',
-    addSourcePlaceholderName: 'পত্রিকার নাম (যেমন: ঢাকা পোস্ট)',
-    addSourcePlaceholderUrl: 'ফিড লিংক (https://...)',
-    addSourceBtn: 'যোগ করুন',
-    storyGrouping: 'পছন্দসমূহ',
-    groupingModeLabel: 'খবর মেলানোর ধরন',
-    groupingExact: 'হুবহু',
-    groupingBalanced: 'স্বাভাবিক',
-    groupingBroad: 'বিস্তৃত',
-    groupingHint: 'স্বাভাবিক মোডে বাংলা ও ইংরেজি মাধ্যমের একই বিষয়ের খবরগুলো একসাথে দেখানো হয়।',
-    storiesPerSource: 'প্রতি মাধ্যমের খবর',
-    languageLabel: 'ভাষা',
-    totalStories: 'মোট সংগৃহীত খবর',
-    storyTopics: 'মোট বিষয়',
-    multiSourceStories: 'একাধিক মাধ্যমে প্রকাশিত',
-    fastestOutlet: 'সবার আগে প্রকাশকারী',
-    searchPlaceholder: 'খবর বা পত্রিকার নাম খুঁজুন...',
-    filterAll: 'সব খবর',
-    filterMulti: 'একাধিক মাধ্যম',
-    sortMultiFirst: 'একাধিক মাধ্যম আগে',
-    sortLatest: 'সর্বশেষ খবর আগে',
-    sortBiggestGap: 'সর্বোচ্চ সময়ের ব্যবধান',
-    firstToReport: 'সবার আগে প্রকাশ',
-    sameTime: 'একই সময়ে',
-    laterSuffix: 'পরে',
-    checkTrend: 'ট্রেন্ড ও বিস্তারিত জানুন',
-    hideTrend: 'বন্ধ করুন',
-    checkingTrend: 'যাচাই হচ্ছে...',
-    sourcesCount: 'টি মাধ্যম',
-    leadMargin: 'সময়ের ব্যবধান',
-    openArticle: 'মূল খবর পড়ুন',
-    noClustersTitle: 'কোনো খবর পাওয়া যায়নি',
-    noClustersDesc: 'খবর মেলানোর ধরন "বিস্তৃত" করে দেখুন অথবা অনুসন্ধান মুছে ফেলুন।',
-    resetFilters: 'সব খবর দেখুন',
-    loadingTitle: 'সর্বশেষ খবর সংগ্রহ করা হচ্ছে',
-    loadingDesc: 'বিভিন্ন সংবাদমাধ্যমের খবর মিলিয়ে দেখা হচ্ছে কোন মাধ্যম সবার আগে প্রকাশ করেছে।',
-    errorTitle: 'খবর লোড করতে সমস্যা হয়েছে',
-    retryBtn: 'আবার চেষ্টা করুন',
-    leaderboardTitle: 'সংবাদমাধ্যমের দ্রুততার তালিকা',
-    leaderboardSubtitle: 'একই খবর একাধিক সংবাদমাধ্যমে প্রকাশিত হলে কে কত দ্রুত তা প্রকাশ করেছে তার তুলনা।',
-    colOutlet: 'সংবাদমাধ্যম',
-    colArticles: 'মোট খবর',
-    colShared: 'যৌথ খবর',
-    colFirstBreaks: 'সবার আগে প্রকাশ',
-    colAvgDelay: 'গড় বিলম্ব',
-    colBestLead: 'সর্বোচ্চ লিড',
-    trendsTitle: 'মানুষ এখন কী খুঁজছে',
-    trendsSubtitle: 'লাইভ গুগল ট্রেন্ডস এবং যেকোনো খবরের বর্তমান জনপ্রিয়তা ও প্রেক্ষাপট দেখুন।',
-    analyzeKeywordPlaceholder: 'যেকোনো বিষয়, ব্যক্তি বা খবরের শিরোনাম লিখুন...',
-    analyzeBtn: 'জনপ্রিয়তা দেখুন',
-    analyzingBtn: 'দেখা হচ্ছে...',
-    liveTrendsHeading: 'এই মুহূর্তের ট্রেন্ডিং বিষয়',
-    groundedAnalysisHeading: 'সংক্ষিপ্ত প্রেক্ষাপট',
-    groundedSourcesHeading: 'সংশ্লিষ্ট সংবাদ সূত্র',
-    storyCountUnit: 'টি খবর',
-    unavailableText: 'এই মুহূর্তে পাওয়া যাচ্ছে না',
+    regions: {
+      BD: 'Bangladesh',
+      US: 'United States',
+      GB: 'United Kingdom',
+      IN: 'India',
+    },
   },
 };

@@ -14,6 +14,7 @@ import type {
   StoryCluster,
   TrendAnalysisResponse,
 } from '../types/news';
+import { fetchJson } from '../utils/api';
 import type { Translations } from '../utils/i18n';
 
 interface ClusterListProps {
@@ -47,15 +48,21 @@ function formatRelativeTime(ms: number, lang: Language): string {
   });
 }
 
-function formatDelayLabel(mins: number, isFirst: boolean, t: Translations): string {
-  if (isFirst) return t.firstToReport;
-  if (mins === 0) return t.sameTime;
-  if (mins < 60) return `${mins}m ${t.laterSuffix}`;
+function formatDuration(mins: number, t: Translations): string {
+  if (mins < 60) {
+    return `${mins} ${t.minuteShort}`;
+  }
   const hrs = Math.floor(mins / 60);
   const rem = mins % 60;
   return rem > 0
-    ? `${hrs}h ${rem}m ${t.laterSuffix}`
-    : `${hrs}h ${t.laterSuffix}`;
+    ? `${hrs} ${t.hourShort} ${rem} ${t.minuteShort}`
+    : `${hrs} ${t.hourShort}`;
+}
+
+function formatDelayLabel(mins: number, isFirst: boolean, t: Translations): string {
+  if (isFirst) return t.firstToReport;
+  if (mins === 0) return t.sameTime;
+  return `${formatDuration(mins, t)} ${t.laterSuffix}`;
 }
 
 export function ClusterList({
@@ -132,21 +139,29 @@ export function ClusterList({
     });
 
     try {
-      const res = await fetch('/api/trends/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyword: cluster.story_topic, geo: 'BD' }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || 'Unable to check search interest right now.');
-      }
+      const json = await fetchJson<TrendAnalysisResponse>(
+        '/api/trends/analyze',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            keyword: cluster.story_topic,
+            geo: 'BD',
+            lang: language,
+          }),
+        },
+        language
+      );
       setTrendMap((prev) => ({ ...prev, [cluster.id]: json }));
     } catch (err) {
       setTrendErrors((prev) => ({
         ...prev,
         [cluster.id]:
-          err instanceof Error ? err.message : 'Unable to check search interest right now.',
+          err instanceof Error
+            ? err.message
+            : language === 'bn'
+              ? 'ট্রেন্ড তথ্য লোড করা যায়নি।'
+              : 'Unable to check search interest right now.',
       }));
     } finally {
       setTrendLoadingId(null);
@@ -340,7 +355,7 @@ export function ClusterList({
                       <>
                         <span aria-hidden="true">·</span>
                         <span className="tabular-nums text-amber-700">
-                          {t.leadMargin}: {cluster.max_delay_minutes}m
+                          {t.leadMargin}: {formatDuration(cluster.max_delay_minutes, t)}
                         </span>
                       </>
                     )}
@@ -377,7 +392,7 @@ export function ClusterList({
                       className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4"
                     >
                       <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
-                        <div className="w-36 shrink-0 flex items-center gap-1.5 text-xs tabular-nums">
+                        <div className="w-40 shrink-0 flex items-center gap-1.5 text-xs tabular-nums">
                           {art.is_first ? (
                             <span className="inline-flex items-center gap-1 font-semibold text-emerald-700">
                               <Zap className="w-3.5 h-3.5 shrink-0" />

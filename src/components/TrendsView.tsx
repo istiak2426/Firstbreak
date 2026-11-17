@@ -1,21 +1,23 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { ArrowUpRight, Search, TrendingUp, RefreshCw } from 'lucide-react';
-import type { LiveTrendItem, TrendAnalysisResponse } from '../types/news';
+import type {
+  Language,
+  LiveTrendItem,
+  LiveTrendsResponse,
+  TrendAnalysisResponse,
+} from '../types/news';
+import { fetchJson } from '../utils/api';
 import type { Translations } from '../utils/i18n';
 
 interface TrendsViewProps {
+  language: Language;
   t: Translations;
 }
 
-const REGIONS = [
-  { code: 'BD', label: 'Bangladesh' },
-  { code: 'US', label: 'United States' },
-  { code: 'GB', label: 'United Kingdom' },
-  { code: 'IN', label: 'India' },
-];
+const REGION_CODES = ['BD', 'US', 'GB', 'IN'] as const;
 
-export function TrendsView({ t }: TrendsViewProps) {
-  const [geo, setGeo] = useState('BD');
+export function TrendsView({ language, t }: TrendsViewProps) {
+  const [geo, setGeo] = useState<'BD' | 'US' | 'GB' | 'IN'>('BD');
   const [liveTrends, setLiveTrends] = useState<LiveTrendItem[]>([]);
   const [trendsLoading, setTrendsLoading] = useState(false);
   const [trendsError, setTrendsError] = useState<string | null>(null);
@@ -29,15 +31,19 @@ export function TrendsView({ t }: TrendsViewProps) {
     setTrendsLoading(true);
     setTrendsError(null);
     try {
-      const res = await fetch(`/api/trends/live?geo=${encodeURIComponent(regionCode)}`);
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || 'Could not load trending searches right now.');
-      }
+      const json = await fetchJson<LiveTrendsResponse>(
+        `/api/trends/live?geo=${encodeURIComponent(regionCode)}`,
+        undefined,
+        language
+      );
       setLiveTrends(json.trends || []);
     } catch (err) {
       setTrendsError(
-        err instanceof Error ? err.message : 'Could not load trending searches right now.'
+        err instanceof Error
+          ? err.message
+          : language === 'bn'
+            ? 'ট্রেন্ডিং তালিকা লোড করা যায়নি।'
+            : 'Could not load trending searches right now.'
       );
     } finally {
       setTrendsLoading(false);
@@ -55,19 +61,23 @@ export function TrendsView({ t }: TrendsViewProps) {
     setAnalyzing(true);
     setAnalysisError(null);
     try {
-      const res = await fetch('/api/trends/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyword: clean, geo }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || 'Could not check search interest right now.');
-      }
+      const json = await fetchJson<TrendAnalysisResponse>(
+        '/api/trends/analyze',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ keyword: clean, geo, lang: language }),
+        },
+        language
+      );
       setAnalysis(json);
     } catch (err) {
       setAnalysisError(
-        err instanceof Error ? err.message : 'Could not check search interest right now.'
+        err instanceof Error
+          ? err.message
+          : language === 'bn'
+            ? 'সার্চ জনপ্রিয়তা যাচাই করা যায়নি।'
+            : 'Could not check search interest right now.'
       );
     } finally {
       setAnalyzing(false);
@@ -181,18 +191,18 @@ export function TrendsView({ t }: TrendsViewProps) {
           </div>
 
           <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-md self-start sm:self-auto">
-            {REGIONS.map((region) => (
+            {REGION_CODES.map((code) => (
               <button
-                key={region.code}
+                key={code}
                 type="button"
-                onClick={() => setGeo(region.code)}
+                onClick={() => setGeo(code)}
                 className={`px-2.5 py-1 text-xs font-medium rounded transition-colors whitespace-nowrap cursor-pointer ${
-                  geo === region.code
+                  geo === code
                     ? 'bg-white text-slate-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                {region.label}
+                {t.regions[code]}
               </button>
             ))}
           </div>
@@ -201,9 +211,9 @@ export function TrendsView({ t }: TrendsViewProps) {
         {trendsError ? (
           <div className="p-6 text-xs text-red-600">{trendsError}</div>
         ) : trendsLoading && liveTrends.length === 0 ? (
-          <div className="p-6 text-xs text-slate-500">Loading trending searches...</div>
+          <div className="p-6 text-xs text-slate-500">{t.loadingTrends}</div>
         ) : liveTrends.length === 0 ? (
-          <div className="p-6 text-xs text-slate-500">No trending topics available right now.</div>
+          <div className="p-6 text-xs text-slate-500">{t.noTrends}</div>
         ) : (
           <ul className="divide-y divide-slate-100">
             {liveTrends.map((item, idx) => (
@@ -224,7 +234,7 @@ export function TrendsView({ t }: TrendsViewProps) {
                       {item.keyword}
                     </button>
                     <span className="tabular-nums text-xs text-emerald-700 font-medium">
-                      {item.traffic} searches
+                      {item.traffic} {t.searchesUnit}
                     </span>
                   </div>
 

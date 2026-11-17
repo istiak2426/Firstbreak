@@ -50,17 +50,17 @@ export function Sidebar({
     const trimmedSource = newSource.trim();
     const trimmedUrl = newUrl.trim();
     if (!trimmedSource || !trimmedUrl) {
-      setFormError('Please enter both the outlet name and link.');
+      setFormError(t.formRequiredError);
       return;
     }
     try {
       const parsed = new URL(trimmedUrl);
       if (!['http:', 'https:'].includes(parsed.protocol)) {
-        setFormError('Link must start with http:// or https://');
+        setFormError(t.formProtocolError);
         return;
       }
     } catch {
-      setFormError('Please enter a valid web link.');
+      setFormError(t.formInvalidUrlError);
       return;
     }
 
@@ -87,17 +87,6 @@ export function Sidebar({
         <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-md">
           <button
             type="button"
-            onClick={() => onLanguageChange('en')}
-            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap cursor-pointer ${
-              language === 'en'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            English
-          </button>
-          <button
-            type="button"
             onClick={() => onLanguageChange('bn')}
             className={`px-3 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap cursor-pointer ${
               language === 'bn'
@@ -106,6 +95,17 @@ export function Sidebar({
             }`}
           >
             বাংলা
+          </button>
+          <button
+            type="button"
+            onClick={() => onLanguageChange('en')}
+            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap cursor-pointer ${
+              language === 'en'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            English
           </button>
         </div>
       </section>
@@ -270,7 +270,7 @@ export function Sidebar({
                   }}
                   className="px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 cursor-pointer"
                 >
-                  Cancel
+                  {t.cancelBtn}
                 </button>
               </div>
             </form>

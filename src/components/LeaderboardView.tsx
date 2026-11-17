@@ -22,7 +22,7 @@ export function LeaderboardView({ stats, t }: LeaderboardViewProps) {
 
       {stats.length === 0 ? (
         <div className="p-8 text-center text-sm text-slate-500">
-          Refresh news to compare reporting speed across outlets.
+          {t.leaderboardEmpty}
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -63,11 +63,15 @@ export function LeaderboardView({ stats, t }: LeaderboardViewProps) {
                     <td className="py-3 px-4 text-right font-mono tabular-nums font-semibold text-emerald-700">
                       {row.first_to_break}
                     </td>
-                    <td className="py-3 px-4 text-right font-mono tabular-nums text-slate-700">
-                      {row.shared_stories > 0 ? `${row.avg_delay_minutes}m` : '—'}
+                    <td className="py-3 px-4 text-right tabular-nums text-slate-700">
+                      {row.shared_stories > 0
+                        ? `${row.avg_delay_minutes} ${t.minuteShort}`
+                        : '—'}
                     </td>
-                    <td className="py-3 px-4 text-right font-mono tabular-nums text-slate-700">
-                      {row.fastest_lead_margin > 0 ? `${row.fastest_lead_margin}m` : '—'}
+                    <td className="py-3 px-4 text-right tabular-nums text-slate-700">
+                      {row.fastest_lead_margin > 0
+                        ? `${row.fastest_lead_margin} ${t.minuteShort}`
+                        : '—'}
                     </td>
                   </tr>
                 );

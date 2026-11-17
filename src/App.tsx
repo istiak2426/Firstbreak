@@ -5,12 +5,13 @@ import { LeaderboardView } from './components/LeaderboardView';
 import { Sidebar } from './components/Sidebar';
 import { TrendsView } from './components/TrendsView';
 import type { ClusterResponse, FeedConfig, Language } from './types/news';
+import { fetchJson } from './utils/api';
 import { I18N } from './utils/i18n';
 
 const INITIAL_FEEDS: FeedConfig[] = [
   {
     id: 'prothom-alo',
-    source: 'Prothom Alo',
+    source: 'প্রথম আলো (Prothom Alo)',
     url: 'https://www.prothomalo.com/feed',
     language: 'bn',
     enabled: true,
@@ -31,7 +32,7 @@ const INITIAL_FEEDS: FeedConfig[] = [
   },
   {
     id: 'bbc-bangla',
-    source: 'BBC Bangla',
+    source: 'বিবিসি বাংলা (BBC Bangla)',
     url: 'https://feeds.bbci.co.uk/bengali/rss.xml',
     fallbackUrl: 'https://www.bbc.com/bengali/index.xml',
     language: 'bn',
@@ -39,7 +40,7 @@ const INITIAL_FEEDS: FeedConfig[] = [
   },
   {
     id: 'dw-bangla',
-    source: 'DW Bangla',
+    source: 'ডয়চে ভেলে বাংলা (DW)',
     url: 'https://rss.dw.com/xml/rss-ben-all',
     language: 'bn',
     enabled: true,
@@ -62,7 +63,7 @@ const INITIAL_FEEDS: FeedConfig[] = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('clusters');
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguage] = useState<Language>('bn');
   const [feeds, setFeeds] = useState<FeedConfig[]>(INITIAL_FEEDS);
   const [threshold, setThreshold] = useState(0.7);
   const [limitPerFeed, setLimitPerFeed] = useState(8);
@@ -75,27 +76,36 @@ export default function App() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchClusters = useCallback(
-    async (targetFeeds: FeedConfig[], targetThreshold: number, targetLimit: number) => {
+    async (
+      targetFeeds: FeedConfig[],
+      targetThreshold: number,
+      targetLimit: number,
+      activeLang: Language
+    ) => {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetch('/api/cluster-news', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            feeds: targetFeeds,
-            threshold: targetThreshold,
-            limit: targetLimit,
-          }),
-        });
-        const json = await res.json();
-        if (!res.ok) {
-          throw new Error(json.error || 'Could not load the latest news right now.');
-        }
+        const json = await fetchJson<ClusterResponse>(
+          '/api/cluster-news',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              feeds: targetFeeds,
+              threshold: targetThreshold,
+              limit: targetLimit,
+            }),
+          },
+          activeLang
+        );
         setClusterData(json);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : 'Could not load the latest news right now.'
+          err instanceof Error
+            ? err.message
+            : activeLang === 'bn'
+              ? 'খবর লোড করতে সমস্যা হয়েছে।'
+              : 'Could not load the latest news right now.'
         );
       } finally {
         setIsLoading(false);
@@ -105,7 +115,7 @@ export default function App() {
   );
 
   useEffect(() => {
-    fetchClusters(INITIAL_FEEDS, 0.7, 8);
+    fetchClusters(INITIAL_FEEDS, 0.7, 8, 'bn');
   }, [fetchClusters]);
 
   const scheduleRecluster = (
@@ -118,7 +128,7 @@ export default function App() {
       clearTimeout(debounceRef.current);
     }
     debounceRef.current = setTimeout(() => {
-      fetchClusters(nextFeeds, nextThreshold, nextLimit);
+      fetchClusters(nextFeeds, nextThreshold, nextLimit, language);
     }, delayMs);
   };
 
@@ -135,7 +145,7 @@ export default function App() {
       id: `custom-${Date.now()}`,
       source,
       url,
-      language: 'en',
+      language: 'bn',
       enabled: true,
       isCustom: true,
     };
@@ -165,7 +175,7 @@ export default function App() {
       <Header
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onRefresh={() => fetchClusters(feeds, threshold, limitPerFeed)}
+        onRefresh={() => fetchClusters(feeds, threshold, limitPerFeed, language)}
         isLoading={isLoading}
         t={t}
       />
@@ -193,7 +203,7 @@ export default function App() {
                 data={clusterData}
                 isLoading={isLoading}
                 error={error}
-                onRetry={() => fetchClusters(feeds, threshold, limitPerFeed)}
+                onRetry={() => fetchClusters(feeds, threshold, limitPerFeed, language)}
                 language={language}
                 t={t}
               />
@@ -206,7 +216,9 @@ export default function App() {
               />
             )}
 
-            {activeTab === 'trends' && <TrendsView t={t} />}
+            {activeTab === 'trends' && (
+              <TrendsView language={language} t={t} />
+            )}
           </div>
         </div>
       </main>
