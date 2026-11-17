@@ -3,18 +3,11 @@ import {
   ArrowUpRight,
   Clock,
   Search,
-  TrendingUp,
   Zap,
   AlertTriangle,
   RotateCcw,
 } from 'lucide-react';
-import type {
-  ClusterResponse,
-  Language,
-  StoryCluster,
-  TrendAnalysisResponse,
-} from '../types/news';
-import { fetchJson } from '../utils/api';
+import type { ClusterResponse, Language } from '../types/news';
 import type { Translations } from '../utils/i18n';
 
 interface ClusterListProps {
@@ -77,10 +70,6 @@ export function ClusterList({
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [sortMode, setSortMode] = useState<SortMode>('multi');
 
-  const [trendMap, setTrendMap] = useState<Record<string, TrendAnalysisResponse>>({});
-  const [trendLoadingId, setTrendLoadingId] = useState<string | null>(null);
-  const [trendErrors, setTrendErrors] = useState<Record<string, string>>({});
-
   const topFirstBreaker = useMemo(() => {
     if (!data || data.outlet_stats.length === 0) return '—';
     const top = data.outlet_stats[0];
@@ -120,53 +109,6 @@ export function ClusterList({
       return b.earliest_ms - a.earliest_ms;
     });
   }, [data, query, filterMode, sortMode]);
-
-  const handleCheckTrend = async (cluster: StoryCluster) => {
-    if (trendMap[cluster.id]) {
-      setTrendMap((prev) => {
-        const next = { ...prev };
-        delete next[cluster.id];
-        return next;
-      });
-      return;
-    }
-
-    setTrendLoadingId(cluster.id);
-    setTrendErrors((prev) => {
-      const next = { ...prev };
-      delete next[cluster.id];
-      return next;
-    });
-
-    try {
-      const json = await fetchJson<TrendAnalysisResponse>(
-        '/api/trends/analyze',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            keyword: cluster.story_topic,
-            geo: 'BD',
-            lang: language,
-          }),
-        },
-        language
-      );
-      setTrendMap((prev) => ({ ...prev, [cluster.id]: json }));
-    } catch (err) {
-      setTrendErrors((prev) => ({
-        ...prev,
-        [cluster.id]:
-          err instanceof Error
-            ? err.message
-            : language === 'bn'
-              ? 'ট্রেন্ড তথ্য লোড করা যায়নি।'
-              : 'Unable to check search interest right now.',
-      }));
-    } finally {
-      setTrendLoadingId(null);
-    }
-  };
 
   if (error && !data) {
     return (
@@ -331,9 +273,6 @@ export function ClusterList({
       ) : (
         <div className="space-y-4">
           {filteredStories.map((cluster) => {
-            const trendResult = trendMap[cluster.id];
-            const trendError = trendErrors[cluster.id];
-            const isTrendLoading = trendLoadingId === cluster.id;
             const leadSnippet = cluster.articles[0]?.snippet;
 
             return (
@@ -389,7 +328,7 @@ export function ClusterList({
                   {cluster.articles.map((art, index) => (
                     <div
                       key={`${art.link}-${index}`}
-                      className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4"
+                      className="py-3 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4"
                     >
                       <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
                         <div className="w-40 shrink-0 flex items-center gap-1.5 text-xs tabular-nums">
@@ -445,66 +384,6 @@ export function ClusterList({
                     </div>
                   ))}
                 </div>
-
-                {/* Inline Trend Summary Trigger */}
-                <div className="mt-2 pt-3 border-t border-slate-100 flex items-center justify-between gap-4">
-                  <button
-                    type="button"
-                    onClick={() => handleCheckTrend(cluster)}
-                    disabled={isTrendLoading}
-                    className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 disabled:opacity-50 cursor-pointer"
-                  >
-                    <TrendingUp className="w-3.5 h-3.5" />
-                    <span>
-                      {isTrendLoading
-                        ? t.checkingTrend
-                        : trendResult
-                          ? t.hideTrend
-                          : t.checkTrend}
-                    </span>
-                  </button>
-                </div>
-
-                {trendError && (
-                  <p className="mt-2 text-xs text-red-600">{trendError}</p>
-                )}
-
-                {trendResult && (
-                  <div className="mt-3 pt-3 border-t border-slate-200 bg-slate-50 rounded-md p-3.5 space-y-2">
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <span className="font-semibold text-slate-900">
-                        {trendResult.momentum_label}
-                      </span>
-                      {trendResult.sources.length > 0 && (
-                        <>
-                          <span aria-hidden="true" className="text-slate-400">·</span>
-                          <span className="text-slate-500 tabular-nums">
-                            {trendResult.sources.length} {t.sourcesCount}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
-                      {trendResult.summary}
-                    </p>
-                    {trendResult.sources.length > 0 && (
-                      <div className="pt-1 flex flex-wrap gap-x-4 gap-y-1">
-                        {trendResult.sources.map((src, idx) => (
-                          <a
-                            key={`${src.uri}-${idx}`}
-                            href={src.uri}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline max-w-xs truncate"
-                          >
-                            <span className="truncate">{src.title}</span>
-                            <ArrowUpRight className="w-3 h-3 shrink-0" />
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
               </article>
             );
           })}

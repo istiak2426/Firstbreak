@@ -66,37 +66,3 @@ export interface ClusterResponse {
   outlet_stats: OutletStat[];
   stories: StoryCluster[];
 }
-
-export interface LiveTrendNewsItem {
-  title: string;
-  url: string;
-  source: string;
-}
-
-export interface LiveTrendItem {
-  keyword: string;
-  traffic: string;
-  published_at: string;
-  link: string;
-  news_items: LiveTrendNewsItem[];
-}
-
-export interface LiveTrendsResponse {
-  geo: string;
-  fetched_at: string;
-  trends: LiveTrendItem[];
-}
-
-export interface GroundedSource {
-  title: string;
-  uri: string;
-}
-
-export interface TrendAnalysisResponse {
-  keyword: string;
-  momentum_label: string;
-  summary: string;
-  matched_live_trends: LiveTrendItem[];
-  sources: GroundedSource[];
-  analyzed_at: string;
-}

@@ -1,7 +1,7 @@
 import { RefreshCw } from 'lucide-react';
 import type { Translations } from '../utils/i18n';
 
-export type ActiveTab = 'clusters' | 'leaderboard' | 'trends';
+export type ActiveTab = 'clusters' | 'leaderboard';
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -21,7 +21,6 @@ export function Header({
   const navItems: Array<{ id: ActiveTab; label: string }> = [
     { id: 'clusters', label: t.navClusters },
     { id: 'leaderboard', label: t.navLeaderboard },
-    { id: 'trends', label: t.navTrends },
   ];
 
   return (

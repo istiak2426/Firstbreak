@@ -3,7 +3,6 @@ import { ClusterList } from './components/ClusterList';
 import { Header, type ActiveTab } from './components/Header';
 import { LeaderboardView } from './components/LeaderboardView';
 import { Sidebar } from './components/Sidebar';
-import { TrendsView } from './components/TrendsView';
 import type { ClusterResponse, FeedConfig, Language } from './types/news';
 import { fetchJson } from './utils/api';
 import { I18N } from './utils/i18n';
@@ -214,10 +213,6 @@ export default function App() {
                 stats={clusterData?.outlet_stats || []}
                 t={t}
               />
-            )}
-
-            {activeTab === 'trends' && (
-              <TrendsView language={language} t={t} />
             )}
           </div>
         </div>

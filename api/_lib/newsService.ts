@@ -5,11 +5,8 @@ import type {
   ClusterResponse,
   FeedConfig,
   FeedStatus,
-  GroundedSource,
-  LiveTrendItem,
   OutletStat,
   StoryCluster,
-  TrendAnalysisResponse,
 } from "../../src/types/news.js";
 
 export const DEFAULT_FEEDS: FeedConfig[] = [
@@ -70,33 +67,6 @@ const rssParser = new Parser({
   headers: {
     "User-Agent":
       "Mozilla/5.0 (compatible; FirstBreakNewsBot/1.0; +https://firstbreak.local)",
-    Accept: "application/rss+xml, application/xml, text/xml, */*",
-  },
-});
-
-type TrendParserItem = {
-  title?: string;
-  link?: string;
-  pubDate?: string;
-  isoDate?: string;
-  traffic?: string;
-  newsItems?: Array<{
-    "ht:news_item_title"?: string[];
-    "ht:news_item_url"?: string[];
-    "ht:news_item_source"?: string[];
-  }>;
-};
-
-const trendsParser = new Parser<Record<string, unknown>, TrendParserItem>({
-  timeout: 10000,
-  customFields: {
-    item: [
-      ["ht:approx_traffic", "traffic"],
-      ["ht:news_item", "newsItems", { keepArray: true }],
-    ],
-  },
-  headers: {
-    "User-Agent": "Mozilla/5.0 (compatible; FirstBreakNewsBot/1.0)",
     Accept: "application/rss+xml, application/xml, text/xml, */*",
   },
 });
@@ -653,143 +623,5 @@ export async function clusterNewsFeeds(params: {
     feed_statuses: feedStatuses,
     outlet_stats: outletStats,
     stories,
-  };
-}
-
-export async function fetchGoogleTrendsRss(
-  geo: string
-): Promise<LiveTrendItem[]> {
-  const safeGeo = ["BD", "US", "GB", "IN"].includes(geo.toUpperCase())
-    ? geo.toUpperCase()
-    : "BD";
-  const url = `https://trends.google.com/trending/rss?geo=${safeGeo}`;
-  const response = await fetch(url, {
-    signal: AbortSignal.timeout(9000),
-    headers: {
-      "User-Agent": "Mozilla/5.0 (compatible; FirstBreakNewsBot/1.0)",
-      Accept: "application/rss+xml, application/xml, text/xml, */*",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Google Trends RSS responded with HTTP ${response.status}`);
-  }
-
-  const xml = await response.text();
-  const parsed = await trendsParser.parseString(xml);
-
-  return (parsed.items || [])
-    .slice(0, 15)
-    .map((item) => {
-      const newsItems = (item.newsItems || [])
-        .slice(0, 3)
-        .map((n) => ({
-          title: n["ht:news_item_title"]?.[0] || "",
-          url: n["ht:news_item_url"]?.[0] || "",
-          source: n["ht:news_item_source"]?.[0] || "",
-        }))
-        .filter((n) => n.title && n.url);
-
-      return {
-        keyword: (item.title || "").trim(),
-        traffic: item.traffic || "Trending",
-        published_at: item.pubDate || "",
-        link:
-          item.link ||
-          `https://trends.google.com/trends/explore?geo=${safeGeo}&q=${encodeURIComponent(item.title || "")}`,
-        news_items: newsItems,
-      };
-    })
-    .filter((t) => Boolean(t.keyword));
-}
-
-export async function analyzeSearchTrend(params: {
-  keyword: string;
-  geo?: string;
-  lang?: string;
-}): Promise<TrendAnalysisResponse> {
-  const keyword = params.keyword.trim();
-  const geo = (params.geo || "BD").toUpperCase();
-  const lang = params.lang === "en" ? "en" : "bn";
-
-  if (!keyword) {
-    const err = new Error("অনুগ্রহ করে একটি বিষয় বা শিরোনাম লিখুন।") as Error & {
-      status?: number;
-    };
-    err.status = 400;
-    throw err;
-  }
-
-  const ai = getGeminiClient();
-
-  const prompt =
-    lang === "bn"
-      ? `নিচের সংবাদ বা বিষয়টি নিয়ে বর্তমান সার্চ আগ্রহ ও প্রেক্ষাপট বাংলায় সংক্ষেপে বিশ্লেষণ করুন: "${keyword}"।
-উত্তর এই ফরম্যাটে দিন:
-১. প্রথম লাইনে লিখুন "MOMENTUM:" এবং তার পাশে লিখুন নিচের যেকোনো একটি: তীব্র আলোচনা, সক্রিয় সংবাদ, স্বাভাবিক আগ্রহ, অথবা নির্দিষ্ট বিষয়।
-২. এরপর ৩-৪ বাক্যে সহজ ও প্রাঞ্জল বাংলায় বুঝিয়ে লিখুন মানুষ কেন এখন এটি নিয়ে খুঁজছে এবং মূল ঘটনা কী।`
-      : `Analyze current search interest and public context for the topic or headline: "${keyword}".
-Provide:
-1. A single line starting with "MOMENTUM:" followed by one of: High Surge, Active Coverage, Steady Interest, or Niche Topic.
-2. A crisp 3-4 sentence newsroom briefing summarizing why people are searching for this right now.`;
-
-  const [liveTrends, groundingResponse] = await Promise.all([
-    fetchGoogleTrendsRss(geo).catch(() => [] as LiveTrendItem[]),
-    ai.models.generateContent({
-      model: "gemini-4-hydrogen",
-      contents: prompt,
-      config: {
-        tools: [{ googleSearch: {} }],
-      },
-    }),
-  ]);
-
-  const rawText = (groundingResponse.text || "").trim();
-  let momentumLabel = lang === "bn" ? "সক্রিয় সংবাদ" : "Active Coverage";
-  let summaryText = rawText;
-
-  const momentumMatch = rawText.match(/MOMENTUM:\s*([^\n]+)/i);
-  if (momentumMatch) {
-    momentumLabel = momentumMatch[1].replace(/[*`]/g, "").trim();
-    summaryText = rawText.replace(momentumMatch[0], "").trim();
-  }
-
-  const chunks =
-    groundingResponse.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-  const seenUris = new Set<string>();
-  const sources: GroundedSource[] = [];
-
-  for (const chunk of chunks) {
-    const uri = chunk.web?.uri;
-    const title = chunk.web?.title || uri;
-    if (uri && !seenUris.has(uri)) {
-      seenUris.add(uri);
-      sources.push({ uri, title: title || uri });
-    }
-  }
-
-  const lowerWords = keyword
-    .toLowerCase()
-    .split(/\s+/)
-    .filter((w) => w.length > 2);
-  const matchedLiveTrends = liveTrends.filter((t) => {
-    const trendLower = t.keyword.toLowerCase();
-    return (
-      trendLower.includes(keyword.toLowerCase()) ||
-      lowerWords.some((w) => trendLower.includes(w))
-    );
-  });
-
-  return {
-    keyword,
-    momentum_label: momentumLabel,
-    summary:
-      summaryText ||
-      (lang === "bn"
-        ? "এই বিষয়ে কোনো অতিরিক্ত সারাংশ পাওয়া যায়নি।"
-        : "No summary returned."),
-    matched_live_trends: matchedLiveTrends,
-    sources: sources.slice(0, 6),
-    analyzed_at: new Date().toISOString(),
   };
 }

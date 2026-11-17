@@ -4,7 +4,6 @@ export interface Translations {
   brand: string;
   navClusters: string;
   navLeaderboard: string;
-  navTrends: string;
   refreshNews: string;
   refreshing: string;
   sidebarSources: string;
@@ -39,9 +38,6 @@ export interface Translations {
   laterSuffix: string;
   minuteShort: string;
   hourShort: string;
-  checkTrend: string;
-  hideTrend: string;
-  checkingTrend: string;
   sourcesCount: string;
   leadMargin: string;
   openArticle: string;
@@ -61,20 +57,8 @@ export interface Translations {
   colFirstBreaks: string;
   colAvgDelay: string;
   colBestLead: string;
-  trendsTitle: string;
-  trendsSubtitle: string;
-  analyzeKeywordPlaceholder: string;
-  analyzeBtn: string;
-  analyzingBtn: string;
-  liveTrendsHeading: string;
-  groundedAnalysisHeading: string;
-  groundedSourcesHeading: string;
-  loadingTrends: string;
-  noTrends: string;
-  searchesUnit: string;
   storyCountUnit: string;
   unavailableText: string;
-  regions: Record<'BD' | 'US' | 'GB' | 'IN', string>;
 }
 
 export const I18N: Record<Language, Translations> = {
@@ -82,7 +66,6 @@ export const I18N: Record<Language, Translations> = {
     brand: 'FirstBreak',
     navClusters: 'প্রধান খবর',
     navLeaderboard: 'কে সবার আগে',
-    navTrends: 'এখন ট্রেন্ডিং',
     refreshNews: 'খবর আপডেট',
     refreshing: 'আপডেট হচ্ছে...',
     sidebarSources: 'সংবাদ মাধ্যমসমূহ',
@@ -117,9 +100,6 @@ export const I18N: Record<Language, Translations> = {
     laterSuffix: 'পরে',
     minuteShort: 'মিনিট',
     hourShort: 'ঘণ্টা',
-    checkTrend: 'ট্রেন্ড ও বিস্তারিত জানুন',
-    hideTrend: 'বন্ধ করুন',
-    checkingTrend: 'যাচাই হচ্ছে...',
     sourcesCount: 'টি মাধ্যম',
     leadMargin: 'সময়ের ব্যবধান',
     openArticle: 'মূল খবর পড়ুন',
@@ -139,31 +119,13 @@ export const I18N: Record<Language, Translations> = {
     colFirstBreaks: 'সবার আগে প্রকাশ',
     colAvgDelay: 'গড় বিলম্ব',
     colBestLead: 'সর্বোচ্চ লিড',
-    trendsTitle: 'মানুষ এখন কী খুঁজছে',
-    trendsSubtitle: 'লাইভ গুগল ট্রেন্ডস এবং যেকোনো খবরের বর্তমান জনপ্রিয়তা ও প্রেক্ষাপট দেখুন।',
-    analyzeKeywordPlaceholder: 'যেকোনো বিষয়, ব্যক্তি বা খবরের শিরোনাম লিখুন...',
-    analyzeBtn: 'জনপ্রিয়তা দেখুন',
-    analyzingBtn: 'দেখা হচ্ছে...',
-    liveTrendsHeading: 'এই মুহূর্তের ট্রেন্ডিং বিষয়',
-    groundedAnalysisHeading: 'সংক্ষিপ্ত প্রেক্ষাপট',
-    groundedSourcesHeading: 'সংশ্লিষ্ট সংবাদ সূত্র',
-    loadingTrends: 'ট্রেন্ডিং তালিকা লোড হচ্ছে...',
-    noTrends: 'এই মুহূর্তে কোনো ট্রেন্ডিং বিষয় পাওয়া যায়নি।',
-    searchesUnit: 'সার্চ',
     storyCountUnit: 'টি খবর',
     unavailableText: 'এই মুহূর্তে পাওয়া যাচ্ছে না',
-    regions: {
-      BD: 'বাংলাদেশ',
-      US: 'যুক্তরাষ্ট্র',
-      GB: 'যুক্তরাজ্য',
-      IN: 'ভারত',
-    },
   },
   en: {
     brand: 'FirstBreak',
     navClusters: 'Top Stories',
     navLeaderboard: 'Who Broke First',
-    navTrends: 'Trending Now',
     refreshNews: 'Refresh News',
     refreshing: 'Updating...',
     sidebarSources: 'News Sources',
@@ -198,9 +160,6 @@ export const I18N: Record<Language, Translations> = {
     laterSuffix: 'later',
     minuteShort: 'm',
     hourShort: 'h',
-    checkTrend: 'Why is this trending?',
-    hideTrend: 'Hide summary',
-    checkingTrend: 'Checking...',
     sourcesCount: 'outlets',
     leadMargin: 'Time spread',
     openArticle: 'Read full story',
@@ -220,24 +179,7 @@ export const I18N: Record<Language, Translations> = {
     colFirstBreaks: 'First to Report',
     colAvgDelay: 'Typical Delay',
     colBestLead: 'Biggest Head Start',
-    trendsTitle: 'What People Are Searching For',
-    trendsSubtitle: 'See live Google search trends and get a quick briefing on why any topic is in the news.',
-    analyzeKeywordPlaceholder: 'Search any topic, person, or headline...',
-    analyzeBtn: 'Check Interest',
-    analyzingBtn: 'Checking...',
-    liveTrendsHeading: 'Trending Searches Right Now',
-    groundedAnalysisHeading: 'Story Context',
-    groundedSourcesHeading: 'Related Coverage',
-    loadingTrends: 'Loading trending searches...',
-    noTrends: 'No trending topics available right now.',
-    searchesUnit: 'searches',
     storyCountUnit: 'stories',
     unavailableText: 'Unavailable right now',
-    regions: {
-      BD: 'Bangladesh',
-      US: 'United States',
-      GB: 'United Kingdom',
-      IN: 'India',
-    },
   },
 };
